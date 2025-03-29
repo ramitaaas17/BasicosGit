@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Colaboración en Flowify</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1e1e1e; /* Fondo oscuro */
+            color: #f1f1f1; /* Texto claro */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 900px;
+            background: #2c2c2c; /* Fondo del contenedor */
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            margin: 20px;
+            width: 100%;
+            overflow-y: auto;
+        }
+        h1 {
+            color: #f39c12; /* Título en amarillo */
+            font-size: 2.8rem;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        h2 {
+            color: #f1f1f1; /* Títulos de las secciones */
+            font-size: 1.7rem;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        p {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 25px;
+            color: #d1d1d1; /* Texto de párrafos */
+        }
+        a {
+            color: #f39c12; /* Enlaces en amarillo */
+            text-decoration: none;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .step {
+            background-color: #333333; /* Fondo de cada paso */
+            border-left: 6px solid #f39c12; /* Resalte en amarillo */
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+        .step pre {
+            background-color: #1a1a1a; /* Fondo para el código */
+            color: #ecf0f1; /* Texto claro en el código */
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .step code {
+            font-size: 1.2rem;
+            color: #f39c12; /* Código en amarillo */
+        }
+        footer {
+            text-align: center;
+            font-size: 1rem;
+            color: #777;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1> Guía para Colaborar en Flowify</h1>
+    <p>¡Bienvenido al equipo! Sigue estos pasos para trabajar correctamente con Git y GitHub en Visual Studio Code.</p>
+
+    <div class="step">
+        <h2>1. Configurar Git y Clonar el Repositorio</h2>
+        <p>Si aún no tienes Git instalado, descárgalo desde aquí: <a href="https://git-scm.com/downloads" target="_blank">Git SCM</a></p>
+        <p>Para clonar el repositorio, abre VSCode y sigue estos pasos:</p>
+        <pre><code>Ctrl + Shift + P</code> (Windows/Linux) o <code>Cmd + Shift + P</code> (Mac)</pre>
+        <p>Escribe <code>Git: Clone</code>, pega la URL del repositorio y selecciona una carpeta para guardarlo.</p>
+    </div>
+
+    <div class="step">
+        <h2>2. Descargar la última versión antes de trabajar</h2>
+        <p>Antes de hacer cambios, actualiza tu código con:</p>
+        <pre><code>git pull origin main</code></pre>
+    </div>
+
+    <div class="step">
+        <h2>3. Hacer cambios en el código</h2>
+        <p>Modifica los archivos necesarios en VSCode y guárdalos con <code>Ctrl + S</code> o <code>Cmd + S</code>.</p>
+    </div>
+
+    <div class="step">
+        <h2>4. Guardar los cambios en Git (Commit)</h2>
+        <p>Verifica los cambios:</p>
+        <pre><code>git status</code></pre>
+        <p>Agrega los archivos:</p>
+        <pre><code>git add .</code></pre>
+        <p>Guarda los cambios con un mensaje descriptivo:</p>
+        <pre><code>git commit -m "Descripción breve del cambio"</code></pre>
+    </div>
+
+    <div class="step">
+        <h2>5. Subir los cambios a GitHub (Push)</h2>
+        <p>Para compartir tu trabajo con el equipo:</p>
+        <pre><code>git push origin main</code></pre>
+    </div>
+
+    <div class="step">
+        <h2>6. Descargar cambios de otros compañeros (Pull)</h2>
+        <p>Antes de hacer más cambios, asegúrate de descargar el trabajo más reciente:</p>
+        <pre><code>git pull origin main</code></pre>
+    </div>
+
+    <div class="step">
+        <h2>Solución de problemas comunes</h2>
+        <p><strong>Error: "Need to specify how to reconcile divergent branches"</strong></p>
+        <pre><code>git pull --rebase origin main</code></pre>
+
+        <p><strong>Si tienes conflictos al hacer <code>git push</code></strong></p>
+        <pre><code>git pull origin main
+git add .
+git commit -m "Resolviendo conflictos"
+git push origin main</code></pre>
+    </div>
+
+    <div class="step">
+        <h2>Resumen del flujo de trabajo</h2>
+        <pre><code>1️⃣ git pull origin main   # Descargar cambios antes de empezar
+2️⃣ Hacer cambios en el código
+3️⃣ git add .              # Agregar cambios
+4️⃣ git commit -m "Descripción del cambio"   # Guardar cambios
+5️⃣ git push origin main   # Subir cambios</code></pre>
+    </div>
+
+    <footer>
+        💡 Siguiendo estos pasos, trabajaremos de forma eficiente y sin conflictos. ¡Feliz coding! 🚀😃
+    </footer>
+</div>
+
+</body>
+</html>
