@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flowify - Animación de Base de Datos</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --accent-color: #e74c3c;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+        }
+
+        h1 {
+            color: var(--dark-color);
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            max-width: 1200px; /* Aumenté el ancho máximo para dar más espacio */
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .animation-selector {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .selector-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .selector-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .selector-btn:hover:not(.active) {
+            background-color: #d5dbdb;
+            transform: translateY(-2px);
+        }
+
+        /* Configuración común para ambas animaciones */
+        .flow-container {
+            position: relative;
+            height: 750px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        /* Animación técnica (original) */
+        #technical-view {
+            display: block;
+        }
+
+        .table {
+            position: absolute;
+            width: 180px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            z-index: 1;
+            opacity: 0.7;
+            transform: scale(0.9);
+            cursor: pointer;
+        }
+
+        .table:hover {
+            opacity: 1;
+            transform: scale(1);
+            z-index: 10;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .table h3 {
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            text-align: center;
+            border-bottom: 2px solid var(--light-color);
+            padding-bottom: 5px;
+        }
+
+        .table ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.9rem;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .table ul li {
+            padding: 3px 0;
+            color: #7f8c8d;
+        }
+
+        .table ul li.primary {
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .table ul li.foreign {
+            color: var(--primary-color);
+            font-style: italic;
+        }
+
+        /* Posiciones de las tablas - Distribuidas mejor */
+        #users {
+            top: 20px;
+            left: 50px;
+            background-color: #e3f2fd;
+        }
+
+        #flujos {
+            top: 180px;  /* Ajustado para mejor visualización */
+            left: 350px;
+            background-color: #e8f5e9;
+        }
+
+        #apis {
+            top: 400px;
+            left: 50px;
+            background-color: #fff3e0;
+        }
+
+        #endpoints {
+            top: 250px;
+            left: 650px; 
+            background-color: #f3e5f5;
+        }
+
+        #parametros_endpoint {
+            top: 520px;
+            left: 750px;
+            background-color: #ede7f6;
+        }
+
+        #acciones {
+            top: 20px;
+            left: 750px;
+            background-color: #e0f7fa;
+        }
+
+        #logs_acciones {
+            top: 550px;
+            left: 400px;
+            background-color: #fce4ec;
+        }
+
+        /* Líneas de conexión */
+        .connection {
+            position: absolute;
+            border-top: 2px dashed #95a5a6;
+            z-index: 0;
+            transform-origin: 0 0;
+            display: none !important; 
+            opacity: 0.4;
+        }
+
+        /* Animación del usuario */
+        .user-icon {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background-color: #2980b9;
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 20;
+            animation: userJourney 30s infinite; /* Aumenté la duración a 30s */
+        }
+
+        @keyframes userJourney {
+            0% { top: 50px; left: 20px; opacity: 0; }
+            3% { top: 50px; left: 20px; opacity: 1; }
+            8% { top: 50px; left: 50px; }
+            15% { top: 180px; left: 350px; }
+            25% { top: 400px; left: 100px; }
+            35% { top: 250px; left: 550px; }
+            45% { top: 520px; left: 700px; }
+            55% { top: 50px; left: 750px; }
+            70% { top: 550px; left: 400px; }
+            85% { top: 50px; left: 50px; }
+            95% { top: 50px; left: 20px; opacity: 1; }
+            100% { top: 50px; left: 20px; opacity: 0; }
+        }
+
+        /* Animación de pulso para mostrar actividad */
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(52, 152, 219, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+        }
+
+        /* ----- Vista Dinámica ----- */
+        #dynamic-view {
+            display: none;
+            height: 850px; /* Aumenté la altura para dar más espacio */
+        }
+
+        .dynamic-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #f9f9f9;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .user-avatar {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background-color: #3498db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 20;
+            top: 20px;
+            left: 20px;
+            animation: userMove 35s infinite; /* Aumenté la duración a 35s */
+        }
+
+        /* Ajusté la animación para reflejar la nueva distribución de entidades */
+        @keyframes userMove {
+            0% { top: 100px; left: 150px; transform: scale(1); opacity: 0; }
+            2% { top: 100px; left: 150px; transform: scale(1); opacity: 1; }
+            7% { top: 100px; left: 150px; transform: scale(1.2); }
+            10% { top: 100px; left: 150px; transform: scale(1); }
+            15% { top: 250px; left: 400px; }
+            18% { top: 250px; left: 400px; transform: scale(1.2); }
+            21% { top: 250px; left: 400px; transform: scale(1); }
+            28% { top: 450px; left: 180px; }
+            31% { top: 450px; left: 180px; transform: scale(1.2); }
+            34% { top: 450px; left: 180px; transform: scale(1); }
+            42% { top: 500px; left: 600px; }
+            45% { top: 500px; left: 600px; transform: scale(1.2); }
+            48% { top: 500px; left: 600px; transform: scale(1); }
+            56% { top: 200px; left: 750px; }
+            59% { top: 200px; left: 750px; transform: scale(1.2); }
+            62% { top: 200px; left: 750px; transform: scale(1); }
+            70% { top: 650px; left: 400px; }
+            73% { top: 650px; left: 400px; transform: scale(1.2); }
+            76% { top: 650px; left: 400px; transform: scale(1); }
+            85% { top: 100px; left: 150px; }
+            95% { top: 100px; left: 150px; opacity: 1; }
+            100% { top: 100px; left: 150px; opacity: 0; }
+        }
+
+        .entity {
+            position: absolute;
+            width: 230px; /* Aumenté el ancho */
+            height: auto;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s ease;
+            z-index: 5;
+            background: white;
+            overflow: hidden;
+        }
+
+        .entity:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+        }
+
+        .entity-header {
+            padding: 10px;
+            border-radius: 8px 8px 0 0;
+            color: white;
+            text-align: center;
+            font-weight: bold;
+            margin: -15px -15px 10px -15px;
+        }
+
+        .entity-body {
+            padding-top: 5px;
+        }
+
+        .entity-icon {
+            font-size: 24px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        /* Nueva distribución de entidades - más espaciadas */
+        .user-entity {
+            top: 50px;
+            left: 150px;
+        }
+        .user-entity .entity-header {
+            background: #3498db;
+        }
+
+        .flow-entity {
+            top: 200px;
+            left: 350px;
+        }
+        .flow-entity .entity-header {
+            background: #2ecc71;
+        }
+
+        .api-entity {
+            top: 400px;
+            left: 100px;
+        }
+        .api-entity .entity-header {
+            background: #f39c12;
+        }
+
+        .endpoint-entity {
+            top: 400px;
+            left: 600px;
+        }
+        .endpoint-entity .entity-header {
+            background: #9b59b6;
+        }
+
+        .action-entity {
+            top: 100px;
+            left: 700px;
+        }
+        .action-entity .entity-header {
+            background: #1abc9c;
+        }
+
+        .log-entity {
+            top: 600px;
+            left: 350px;
+        }
+        .log-entity .entity-header {
+            background: #e74c3c;
+        }
+
+        .entity-info {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        /* Flechas de flujo */
+        .flow-arrow {
+            position: absolute;
+            background-color: #bdc3c7;
+            height: 4px;
+            transform-origin: 0 50%;
+            z-index: 3;
+            opacity: 0.6;
+            transition: all 0.4s ease;
+            border-radius: 2px;
+        }
+
+        .flow-arrow:after {
+            content: '';
+            position: absolute;
+            right: -2px;
+            top: -8px;
+            width: 0;
+            height: 0;
+            border-left: 14px solid #bdc3c7;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            transition: all 0.4s ease;
+        }
+
+        .flow-arrow.active {
+            background-color: #3498db;
+            opacity: 1;
+            height: 6px;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.8), 0 0 20px rgba(52, 152, 219, 0.4);
+            animation: flowGlow 1.5s infinite;
+        }
+
+        .flow-arrow.active:after {
+            border-left-color: #3498db;
+            filter: drop-shadow(0 0 5px rgba(52, 152, 219, 0.8));
+        }
+
+        @keyframes flowGlow {
+            0% { box-shadow: 0 0 5px rgba(52, 152, 219, 0.5), 0 0 10px rgba(52, 152, 219, 0.3); opacity: 0.8; }
+            50% { box-shadow: 0 0 15px rgba(52, 152, 219, 0.8), 0 0 30px rgba(52, 152, 219, 0.6); opacity: 1; }
+            100% { box-shadow: 0 0 5px rgba(52, 152, 219, 0.5), 0 0 10px rgba(52, 152, 219, 0.3); opacity: 0.8; }
+        }
+
+        .active-entity {
+            animation: entityPulse 2s infinite;
+        }
+
+        @keyframes entityPulse {
+            0% { box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3); }
+            50% { box-shadow: 0 12px 25px rgba(52, 152, 219, 0.8); }
+            100% { box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3); }
+        }
+
+        /* Panel de información */
+        .info-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px; /* Cambiar a right para evitar solapamiento */
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-width: 350px; /* Reducir el ancho */
+            width: 2530px;
+            transition: all 0.3s ease;
+            z-index: 30;
+        }
+
+        .info-panel h3 {
+            margin-top: 0;
+            color: #3498db;
+            font-size: 1.3rem;
+        }
+
+        .dynamic-message {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        /* Botones y controles */
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .control-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .control-btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Panel de descripción */
+        .description {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .description h2 {
+            color: var(--dark-color);
+            margin-top: 0;
+        }
+
+        .step {
+            display: flex;
+            margin-bottom: 10px;
+            align-items: center;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .step:hover {
+            opacity: 1;
+        }
+
+        .step-icon {
+            width: 30px;
+            height: 30px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flowify - Visualización de Base de Datos</h1>
+    
+    <div class="container">
+        <div class="animation-selector">
+            <button id="technical-btn" class="selector-btn active" onclick="switchView('technical')">Vista Técnica</button>
+            <button id="dynamic-btn" class="selector-btn" onclick="switchView('dynamic')">Vista Dinámica</button>
+        </div>
+        
+        <!-- Vista Técnica (original) -->
+        <div id="technical-view" class="flow-container">
+            <!-- Tablas de la base de datos -->
+            <div id="users" class="table">
+                <h3>users</h3>
+                <ul>
+                    <li class="primary">idusuario</li>
+                    <li>username</li>
+                    <li>email</li>
+                    <li>password</li>
+                    <li>active</li>
+                    <li>created_at</li>
+                    <li>updated_at</li>
+                    <li>last_login</li>
+                    <li>email_verified</li>
+                </ul>
+            </div>
+            
+            <div id="flujos" class="table">
+                <h3>flujos</h3>
+                <ul>
+                    <li class="primary">idflujo</li>
+                    <li class="foreign">idusuario</li>
+                    <li>nombre</li>
+                    <li>descripcion</li>
+                    <li>flujo_activo</li>
+                    <li>creado_en</li>
+                    <li>actualizado_en</li>
+                </ul>
+            </div>
+            
+            <div id="apis" class="table">
+                <h3>apis</h3>
+                <ul>
+                    <li class="primary">idapi</li>
+                    <li>nombre</li>
+                    <li>descripcion</li>
+                    <li>base_url</li>
+                    <li>autenticacion</li>
+                    <li>creada_en</li>
+                    <li>actualizada_en</li>
+                </ul>
+            </div>
+            
+            <div id="endpoints" class="table">
+                <h3>endpoints</h3>
+                <ul>
+                    <li class="primary">idendpoint</li>
+                    <li class="foreign">idapi</li>
+                    <li>nombre</li>
+                    <li>metodo</li>
+                    <li>ruta</li>
+                    <li>descripcion</li>
+                </ul>
+            </div>
+            
+            <div id="parametros_endpoint" class="table">
+                <h3>parametros_endpoint</h3>
+                <ul>
+                    <li class="primary">idparametro</li>
+                    <li class="foreign">idendpoint</li>
+                    <li>nombre</li>
+                    <li>tipo</li>
+                    <li>requerido</li>
+                    <li>ubicacion</li>
+                </ul>
+            </div>
+            
+            <div id="acciones" class="table">
+                <h3>acciones</h3>
+                <ul>
+                    <li class="primary">idaccion</li>
+                    <li class="foreign">idflujo</li>
+                    <li class="foreign">idendpoint</li>
+                    <li>nombre</li>
+                    <li>tipo_accion</li>
+                    <li>configuracion</li>
+                    <li>orden</li>
+                    <li>accion_creada</li>
+                    <li>accion_actualizada</li>
+                </ul>
+            </div>
+            
+            <div id="logs_acciones" class="table">
+                <h3>logs_acciones</h3>
+                <ul>
+                    <li class="primary">idlog</li>
+                    <li class="foreign">idaccion</li>
+                    <li>estado</li>
+                    <li>respuesta</li>
+                    <li>ejecutado_en</li>
+                </ul>
+            </div>
+            
+            <!-- Ícono del usuario que se mueve por la animación -->
+            <div class="user-icon">👤</div>
+        </div>
+        
+        <!-- Vista Dinámica (mejorada) -->
+        <div id="dynamic-view" class="flow-container dynamic-container">
+            <!-- Entidades representadas de forma más visual -->
+            <div class="user-entity entity">
+                <div class="entity-header">👤 Usuario</div>
+                <div class="entity-body">
+                    <div>Se registra en Flowify</div>
+
+                </div>
+            </div>
+            
+            <div class="flow-entity entity">
+                <div class="entity-header">📊 Flujo</div>
+                <div class="entity-body">
+                    <div>El usuario crea un flujo personalizado</div>
+
+                </div>
+            </div>
+            
+            <div class="api-entity entity">
+                <div class="entity-header">🔌 API</div>
+                <div class="entity-body">
+                    <div>Selecciona servicios externos (Gmail, Trello...)</div>
+                </div>
+            </div>
+            
+            <div class="endpoint-entity entity">
+                <div class="entity-header">🎯 Endpoint</div>
+                <div class="entity-body">
+                    <div>Operaciones específicas de cada API</div>
+                </div>
+            </div>
+            
+            <div class="action-entity entity">
+                <div class="entity-header">⚡ Acción</div>
+                <div class="entity-body">
+                    <div>Pasos que componen el flujo</div>
+
+                </div>
+            </div>
+            
+            <div class="log-entity entity">
+                <div class="entity-header">📝 Log</div>
+                <div class="entity-body">
+                    <div>Registro de ejecuciones</div>
+                </div>
+            </div>
+            
+            <!-- Flechas que conectan entidades -->
+            <div class="flow-arrow user-to-flow"></div>
+            <div class="flow-arrow flow-to-action"></div>
+            <div class="flow-arrow api-to-endpoint"></div>
+            <div class="flow-arrow endpoint-to-action"></div>
+            <div class="flow-arrow action-to-log"></div>
+            
+            <!-- Avatar de usuario que se mueve -->
+            <div class="user-avatar">🧑‍💻</div>
+            
+            <!-- Panel de información que cambia -->
+            <div class="info-panel">
+                <h3>Flujo de Usuario</h3>
+                <div id="dynamic-message" class="dynamic-message">
+                    Bienvenido a Flowify! Iniciando el proceso...
+                </div>
+            </div>
+        </div>
+        
+        <div class="description">
+            <h2>¿Cómo funciona Flowify?</h2>
+            
+            <div class="step">
+                <div class="step-icon">1</div>
+                <div>Te registras → se guarda tu información en la tabla <strong>users</strong>.</div>
+            </div>
+            
+            <div class="step">
+                <div class="step-icon">2</div>
+                <div>Creas un flujo → se crea un registro en <strong>flujos</strong> vinculado a tu ID de usuario.</div>
+            </div>
+            
+            <div class="step">
+                <div class="step-icon">3</div>
+                <div>Seleccionas una API → se registra en <strong>apis</strong> si no existe previamente.</div>
+            </div>
+            
+            <div class="step">
+                <div class="step-icon">4</div>
+                <div>Eliges un endpoint → se utiliza un registro de la tabla <strong>endpoints</strong> vinculado a la API elegida.</div>
+            </div>
+            
+            <div class="step">
+                <div class="step-icon">5</div>
+                <div>Configuras los parámetros → se guardan en <strong>parametros_endpoint</strong> para el endpoint seleccionado.</div>
+            </div>
+            
+            <div class="step">
+                <div class="step-icon">6</div>
+                <div>Agregas una acción al flujo → se registra en <strong>acciones</strong>, conectada al flujo y a un endpoint específico.</div>
+            </div>
+            
+            <div class="step">
+                <div class="step-icon">7</div>
+                <div>Cuando ejecutas el flujo → se guardan los resultados en <strong>logs_acciones</strong>, incluyendo errores o resultados.</div>
+            </div>
+        </div>
+        
+        <div class="control-buttons">
+            <button class="control-btn" onclick="restartAnimation()">Reiniciar Animación</button>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentView = 'technical';
+        let animationInterval;
+        let animationPhase = 0;
+
+        const messages = [
+        // Ejemplo 1: María - Marketing
+        "María (Marketing) crea un flujo para monitorear menciones en redes sociales",
+        "María configura un flujo que conecta Twitter y Slack para notificaciones",
+        "María utiliza la API de Twitter para buscar menciones de su marca",
+        "El endpoint 'Search Tweets' captura publicaciones con hashtags específicos",
+        "María configura acciones para enviar alertas a un canal de Slack",
+        "El sistema registra 28 menciones en las últimas 24 horas",
+        "María recibe análisis de sentimiento sobre las menciones en tiempo real",
+        
+        "Carlos (Finanzas) automatiza la recopilación de datos de operaciones diarias",
+        "Carlos conecta su flujo con API bancarias y Stripe para consolidar ingresos",
+        "El sistema procesa datos financieros a través de endpoints configurados",
+        "Carlos usa endpoints para obtener balances diarios de diferentes cuentas",
+        "Las acciones programadas actualizan automáticamente sus hojas de cálculo",
+        "Los logs registran transacciones exitosas y balances actualizados",
+        "Carlos recibe un resumen financiero diario generado automáticamente",
+        
+        // Ejemplo 3: Lucía - Soporte técnico
+        "Lucía (Soporte) crea un flujo para gestionar tickets de soporte técnico",
+        "Su flujo conecta Gmail con Trello para organizar solicitudes de clientes",
+        "Utiliza la API de Gmail para detectar correos con asunto 'Soporte'",
+        "El endpoint procesa los correos entrantes extrayendo datos relevantes",
+        "Acciones automáticas crean tarjetas en Trello con la información del ticket",
+        "El sistema registra cada solicitud procesada y su estado actual",
+        "Lucía supervisa el panel de Trello con tickets actualizados en tiempo real"
+    ];
+
+    // Función para inicializar las conexiones
+    function initializeConnections() {
+        // Usuario a Flujos
+        drawConnection('users', 'flujos');
+        
+        // Flujos a Acciones
+        drawConnection('flujos', 'acciones');
+        
+        // APIs a Endpoints
+        drawConnection('apis', 'endpoints');
+        
+        // Endpoints a Parámetros
+        drawConnection('endpoints', 'parametros_endpoint');
+        
+        // Endpoints a Acciones
+        drawConnection('endpoints', 'acciones');
+        
+        // Acciones a Logs
+        drawConnection('acciones', 'logs_acciones');
+    }
+
+    // Función para dibujar una conexión
+    function drawConnection(from, to) {
+        const fromRect = document.getElementById(from).getBoundingClientRect();
+        const toRect = document.getElementById(to).getBoundingClientRect();
+        
+        // Crear el elemento de conexión
+        const connection = document.createElement('div');
+        connection.classList.add('connection');
+        document.getElementById('technical-view').appendChild(connection);
+        
+        // Calcular posición y rotación
+        const fromX = fromRect.left + fromRect.width / 2;
+        const fromY = fromRect.top + fromRect.height / 2;
+        const toX = toRect.left + toRect.width / 2;
+        const toY = toRect.top + toRect.height / 2;
+        
+        const distance = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+        const angle = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+        
+        // Aplicar estilos
+        connection.style.width = distance + 'px';
+        connection.style.left = fromX + 'px';
+        connection.style.top = fromY + 'px';
+        connection.style.transform = `rotate(${angle}deg)`;
+    }
+
+    // Función para cambiar entre vistas
+    function switchView(view) {
+        currentView = view;
+        
+        if (view === 'technical') {
+            document.getElementById('technical-view').style.display = 'block';
+            document.getElementById('dynamic-view').style.display = 'none';
+            document.getElementById('technical-btn').classList.add('active');
+            document.getElementById('dynamic-btn').classList.remove('active');
+            
+            // Inicializar conexiones si no existen
+            if (!document.querySelector('.connection')) {
+                initializeConnections();
+            }
+        } else {
+            document.getElementById('technical-view').style.display = 'none';
+            document.getElementById('dynamic-view').style.display = 'block';
+            document.getElementById('technical-btn').classList.remove('active');
+            document.getElementById('dynamic-btn').classList.add('active');
+            
+            // Inicializar animación dinámica
+            initDynamicView();
+        }
+    }
+
+    function initDynamicView() {
+    // Pequeño retraso para asegurar que los elementos están renderizados
+    setTimeout(() => {
+        positionArrows();
+        
+        // Resto del código...
+    }, 100);
+    
+    // Iniciar animación de mensajes
+    if (animationInterval) {
+        clearInterval(animationInterval);
+    }
+    
+    animationPhase = 0;
+    updateDynamicMessage();
+    
+    animationInterval = setInterval(() => {
+        animationPhase = (animationPhase + 1) % messages.length;
+        updateDynamicMessage();
+        updateActiveElements();
+    }, 5000);
+}
+
+
+// Función para posicionar una flecha entre dos elementos
+function positionArrow(arrowClass, fromElement, toElement) {
+    const fromRect = fromElement.getBoundingClientRect();
+    const toRect = toElement.getBoundingClientRect();
+    
+    const arrow = document.querySelector('.' + arrowClass);
+    if (!arrow) return; // Protección en caso de que la flecha no exista
+    
+    // Obtener las posiciones centrales
+    const fromCenterX = fromRect.left + (fromRect.width / 2);
+    const fromCenterY = fromRect.top + (fromRect.height / 2);
+    const toCenterX = toRect.left + (toRect.width / 2);
+    const toCenterY = toRect.top + (toRect.height / 2);
+    
+    // Vector entre centros
+    const dx = toCenterX - fromCenterX;
+    const dy = toCenterY - fromCenterY;
+    
+    // Determinar qué borde usar basado en el ángulo
+    const angle = Math.atan2(dy, dx);
+    
+    // Calcular los puntos de inicio y fin en los bordes de los elementos
+    let fromX, fromY, toX, toY;
+    
+    // Determinamos si es más horizontal o vertical
+    if (Math.abs(dx) > Math.abs(dy)) {
+        // Más horizontal
+        fromY = fromCenterY;
+        toY = toCenterY;
+        
+        if (dx > 0) {
+            // Destino a la derecha
+            fromX = fromRect.right - 5;
+            toX = toRect.left + 5;
+        } else {
+            // Destino a la izquierda
+            fromX = fromRect.left + 5;
+            toX = toRect.right - 5;
+        }
+    } else {
+        // Más vertical
+        fromX = fromCenterX;
+        toX = toCenterX;
+        
+        if (dy > 0) {
+            // Destino abajo
+            fromY = fromRect.bottom - 5;
+            toY = toRect.top + 5;
+        } else {
+            // Destino arriba
+            fromY = fromRect.top + 5;
+            toY = toRect.bottom - 5;
+        }
+    }
+    
+    // Calcular longitud y ángulo de la flecha
+    const distance = Math.sqrt(Math.pow(toX - fromX, 2) + Math.pow(toY - fromY, 2));
+    const angleInDegrees = Math.atan2(toY - fromY, toX - fromX) * 180 / Math.PI;
+    
+    // Aplicar estilos
+    arrow.style.width = `${distance}px`;
+    arrow.style.left = `${fromX}px`;
+    arrow.style.top = `${fromY}px`;
+    arrow.style.transform = `rotate(${angleInDegrees}deg)`;
+    
+    // Asegurarnos de que la flecha sea visible
+    arrow.style.display = 'block';
+}
+
+    // Función para actualizar el mensaje dinámico
+    function updateDynamicMessage() {
+        document.getElementById('dynamic-message').textContent = messages[animationPhase];
+    }
+
+    // Función para activar elementos según la fase
+
+function updateActiveElements() {
+    // Quitar clases activas
+    document.querySelectorAll('.entity').forEach(el => {
+        el.classList.remove('active-entity');
+    });
+    document.querySelectorAll('.flow-arrow').forEach(el => {
+        el.classList.remove('active');
+    });
+    
+    // Añadir clases activas según la fase con efecto de retraso
+    setTimeout(() => {
+        switch (animationPhase % 7) {
+            case 0: // Usuario
+                document.querySelector('.user-entity').classList.add('active-entity');
+                break;
+            case 1: // Usuario -> Flujo
+                document.querySelector('.user-entity').classList.add('active-entity');
+                setTimeout(() => {
+                    document.querySelector('.user-to-flow').classList.add('active');
+                    setTimeout(() => {
+                        document.querySelector('.flow-entity').classList.add('active-entity');
+                    }, 300);
+                }, 200);
+                break;
+            case 2: // API
+                document.querySelector('.api-entity').classList.add('active-entity');
+                break;
+            case 3: // API -> Endpoint
+                document.querySelector('.api-entity').classList.add('active-entity');
+                setTimeout(() => {
+                    document.querySelector('.api-to-endpoint').classList.add('active');
+                    setTimeout(() => {
+                        document.querySelector('.endpoint-entity').classList.add('active-entity');
+                    }, 300);
+                }, 200);
+                break;
+            case 4: // Endpoint -> Acción -> Flujo
+                document.querySelector('.endpoint-entity').classList.add('active-entity');
+                setTimeout(() => {
+                    document.querySelector('.endpoint-to-action').classList.add('active');
+                    setTimeout(() => {
+                        document.querySelector('.action-entity').classList.add('active-entity');
+                        document.querySelector('.flow-to-action').classList.add('active');
+                        setTimeout(() => {
+                            document.querySelector('.flow-entity').classList.add('active-entity');
+                        }, 300);
+                    }, 300);
+                }, 200);
+                break;
+            case 5: // Acción -> Log
+                document.querySelector('.action-entity').classList.add('active-entity');
+                setTimeout(() => {
+                    document.querySelector('.action-to-log').classList.add('active');
+                    setTimeout(() => {
+                        document.querySelector('.log-entity').classList.add('active-entity');
+                    }, 300);
+                }, 200);
+                break;
+            case 6: // Todo conectado
+                document.querySelector('.user-entity').classList.add('active-entity');
+                document.querySelector('.flow-entity').classList.add('active-entity');
+                document.querySelector('.api-entity').classList.add('active-entity');
+                document.querySelector('.endpoint-entity').classList.add('active-entity');
+                document.querySelector('.action-entity').classList.add('active-entity');
+                document.querySelector('.log-entity').classList.add('active-entity');
+                document.querySelectorAll('.flow-arrow').forEach(el => {
+                    el.classList.add('active');
+                });
+                break;
+        }
+    }, 100);
+}
+
+    // Función para reiniciar la animación
+    function restartAnimation() {
+        if (currentView === 'technical') {
+            // Reiniciar animación del icono de usuario
+            const userIcon = document.querySelector('.user-icon');
+            userIcon.style.animation = 'none';
+            setTimeout(() => {
+                userIcon.style.animation = 'userJourney 30s infinite';
+            }, 10);
+        } else {
+            // Reiniciar animación dinámica
+            const userAvatar = document.querySelector('.user-avatar');
+            userAvatar.style.animation = 'none';
+            setTimeout(() => {
+                userAvatar.style.animation = 'userMove 35s infinite';
+            }, 10);
+            
+            // Reiniciar mensajes
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+            animationPhase = 0;
+            updateDynamicMessage();
+            updateActiveElements();
+            
+            animationInterval = setInterval(() => {
+                animationPhase = (animationPhase + 1) % messages.length;
+                updateDynamicMessage();
+                updateActiveElements();
+            }, 5000);
+        }
+    }
+
+    // Inicializar cuando el documento esté listo
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeConnections();
+        
+        // Ajustar posición de flechas cuando se cambia el tamaño de la ventana
+        window.addEventListener('resize', () => {
+            if (currentView === 'technical') {
+                // Limpiar y reiniciar conexiones
+                document.querySelectorAll('.connection').forEach(el => el.remove());
+                initializeConnections();
+            } else {
+                positionArrows();
+            }
+        });
+    });
+</script>
+</body>
+</html>
